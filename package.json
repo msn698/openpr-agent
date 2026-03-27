@@ -13,7 +13,8 @@
     "test": "vitest run --coverage",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "generate:webhook-secret": "node scripts/generate-webhook-secret.mjs"
   },
   "engines": {
     "node": ">=20"

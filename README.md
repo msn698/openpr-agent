@@ -27,6 +27,14 @@ Then expose your local server (e.g. with ngrok) and configure your GitHub App we
 
 `https://<your-domain>/webhooks/github`
 
+Generate a secure webhook secret quickly:
+
+```bash
+npm run generate:webhook-secret
+```
+
+Detailed app setup guide: [`docs/GITHUB_APP_SETUP.md`](docs/GITHUB_APP_SETUP.md)
+
 ## Cloud-hosted path (easiest to scale)
 
 - Deploy to Fly.io / Railway / Render / AWS with env vars from `.env.example`
