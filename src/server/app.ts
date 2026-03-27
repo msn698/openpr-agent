@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { loadEnv } from '../config/env.js';
 import { rulesSchema } from '../config/schema.js';
 import { parseCommand } from '../core/commands.js';
+import { buildFixPlan, formatFixPlan } from '../core/fixPlan.js';
 import { getInstallationClient } from '../github/client.js';
 import { buildReviewBody } from '../github/reviewFlow.js';
 import { MockAdapter } from '../models/adapter.js';
@@ -132,11 +133,15 @@ async function handleIssueComment(payload: IssueCommentPayload, appId: string, p
   const client = await getInstallationClient(appId, privateKey, installationId);
 
   if (command.kind === 'fix') {
+    const filesResponse = await client.pulls.listFiles({ owner, repo, pull_number: issueNumber, per_page: 100 });
+    const changedFiles = filesResponse.data.map((f) => f.filename);
+    const plan = buildFixPlan(changedFiles);
+
     await client.issues.createComment({
       owner,
       repo,
       issue_number: issueNumber,
-      body: '🛠️ Autofix flow queued. (Next milestone: safe patch generation + commit on bot branch.)'
+      body: formatFixPlan(plan)
     });
   }
 
