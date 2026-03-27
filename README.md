@@ -2,30 +2,45 @@
 
 Open-source AI pull request reviewer + fixer for GitHub.
 
-## MVP status
+## What works now
 
-This repository contains the initial secure core:
-- PR risk/finding engine
-- Rule-based repository config (`.openpr.yml`)
-- Secret redaction layer
-- Test suite with coverage thresholds
+- GitHub webhook server (`/webhooks/github`) with signature verification
+- Replay-attack protection for webhook deliveries
+- Pull request opened handler that comments with review findings
+- `@openpr fix` and `@openpr review` command parsing on PR comments
+- Rule-based checks (`.openpr.yml` / `.openpr.json`)
+- Security redaction layer for sensitive token patterns
+- CI + CodeQL + Dependabot + test coverage gates
 
-## Quick start
+## Quick start (local/self-hosted)
 
 ```bash
+cp .env.example .env
 npm install
-npm run test
-npm run build
+npm run lint
+npm run typecheck
+npm test
 npm run dev
 ```
 
+Then expose your local server (e.g. with ngrok) and configure your GitHub App webhook URL:
+
+`https://<your-domain>/webhooks/github`
+
+## Cloud-hosted path (easiest to scale)
+
+- Deploy to Fly.io / Railway / Render / AWS with env vars from `.env.example`
+- Keep one instance running behind HTTPS
+- Configure GitHub App for your org/repo installations
+
 ## Security posture
 
-- Input validation via Zod
-- Secret redaction before logging/output
-- Strict TypeScript settings
-- CI requires lint, tests, typecheck
-- Dependabot + npm audit in CI
+- HMAC signature verification (`x-hub-signature-256`)
+- Replay detection via `x-github-delivery`
+- Strict environment validation with Zod
+- Secret redaction in generated output
+- CI runs lint, typecheck, tests, and npm high-severity audit checks
+- CodeQL static analysis on pushes, PRs, and schedule
 
 ## Config
 
@@ -42,9 +57,10 @@ requiredChecks:
 commentStyle: "concise"
 ```
 
-## Next milestones
+## Roadmap
 
-1. GitHub App installation + comment posting API integration
-2. Inline diff-aware suggestions
-3. `@openpr fix` command with safe patch generation
-4. Multi-model adapter (OpenAI/Anthropic/local)
+1. Safe autofix branch + patch generation (`@openpr fix`)
+2. Incremental diff-aware re-review mode
+3. Provider adapters (OpenAI/Anthropic/local)
+4. SARIF + security annotation output
+5. Dashboard for org-wide PR quality metrics
