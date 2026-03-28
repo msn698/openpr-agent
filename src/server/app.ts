@@ -10,6 +10,8 @@ import { executeAutofixCommit } from '../github/autofixCommit.js';
 import { getInstallationClient } from '../github/client.js';
 import { buildReviewBody } from '../github/reviewFlow.js';
 import { createModelAdapter } from '../models/factory.js';
+import { buildReviewFooter } from '../core/reviewState.js';
+import { getLastReviewedCommitSha } from '../github/reviewHistory.js';
 import { assertNotReplay, verifySignature } from '../security/webhookGuard.js';
 
 const replayStore = new Map<string, number>();
@@ -74,7 +76,7 @@ export function createServer() {
       if (event === 'issue_comment') {
         const payload = JSON.parse(body) as IssueCommentPayload;
         if (payload.action === 'created') {
-          await handleIssueComment(payload, env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY);
+          await handleIssueComment(payload, env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY, modelAdapter);
         }
       }
 
@@ -126,10 +128,22 @@ async function handlePullRequestOpened(
     model: modelAdapter
   });
 
-  await client.issues.createComment({ owner, repo, issue_number: pullNumber, body: commentBody });
+  const prInfo = await client.pulls.get({ owner, repo, pull_number: pullNumber });
+
+  await client.issues.createComment({
+    owner,
+    repo,
+    issue_number: pullNumber,
+    body: `${commentBody}\n\n${buildReviewFooter(prInfo.data.head.sha)}`
+  });
 }
 
-async function handleIssueComment(payload: IssueCommentPayload, appId: string, privateKey: string) {
+async function handleIssueComment(
+  payload: IssueCommentPayload,
+  appId: string,
+  privateKey: string,
+  modelAdapter: ReturnType<typeof createModelAdapter>
+) {
   const installationId = payload.installation?.id;
   if (!installationId || !payload.issue.pull_request) return;
 
@@ -208,11 +222,54 @@ async function handleIssueComment(payload: IssueCommentPayload, appId: string, p
   }
 
   if (command.kind === 'review') {
+    const prInfo = await client.pulls.get({ owner, repo, pull_number: issueNumber });
+    const headSha = prInfo.data.head.sha;
+    const lastReviewedSha = await getLastReviewedCommitSha({
+      client,
+      owner,
+      repo,
+      issueNumber
+    });
+
+    if (lastReviewedSha && lastReviewedSha === headSha) {
+      await client.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body: `🔁 Re-review skipped: already reviewed at commit \`${headSha}\`.`
+      });
+      return;
+    }
+
+    let changedFiles: string[];
+
+    if (lastReviewedSha) {
+      try {
+        const comparison = await client.repos.compareCommits({ owner, repo, base: lastReviewedSha, head: headSha });
+        changedFiles = comparison.data.files?.map((f) => f.filename).filter(Boolean) as string[];
+      } catch {
+        const filesResponse = await client.pulls.listFiles({ owner, repo, pull_number: issueNumber, per_page: 100 });
+        changedFiles = filesResponse.data.map((f) => f.filename);
+      }
+    } else {
+      const filesResponse = await client.pulls.listFiles({ owner, repo, pull_number: issueNumber, per_page: 100 });
+      changedFiles = filesResponse.data.map((f) => f.filename);
+    }
+
+    const reviewBody = await buildReviewBody({
+      owner,
+      repo,
+      pullNumber: issueNumber,
+      changedFiles,
+      rules: rulesSchema.parse({}),
+      model: modelAdapter
+    });
+
     await client.issues.createComment({
       owner,
       repo,
       issue_number: issueNumber,
-      body: '🔁 Re-review queued. (Next milestone: incremental diff-aware review pass.)'
+      body: `${reviewBody}\n\n${buildReviewFooter(headSha)}`
     });
   }
 }
