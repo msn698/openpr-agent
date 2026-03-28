@@ -9,6 +9,8 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   MODEL_PROVIDER: z.enum(['mock', 'openai', 'anthropic', 'local']).default('mock'),
+  MODEL_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
+  MODEL_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
   OLLAMA_BASE_URL: z.string().url().optional(),
   LOCAL_MODEL: z.string().optional()
 });

@@ -1,3 +1,5 @@
+import { fetchWithRetry, type RetryOptions } from './http.js';
+
 export type ReviewInput = {
   changedFiles: string[];
   findingsSummary: string;
@@ -34,6 +36,7 @@ abstract class HttpModelAdapter implements ModelAdapter {
     private readonly apiKey: string,
     private readonly endpoint: string,
     private readonly model: string,
+    private readonly retryOptions: RetryOptions,
     private readonly authHeader = 'Authorization'
   ) {}
 
@@ -46,14 +49,18 @@ abstract class HttpModelAdapter implements ModelAdapter {
 
     const body = this.buildRequest(prompt);
 
-    const response = await fetch(this.endpoint, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        [this.authHeader]: `Bearer ${this.apiKey}`
+    const response = await fetchWithRetry(
+      this.endpoint,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          [this.authHeader]: `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify(body)
       },
-      body: JSON.stringify(body)
-    });
+      this.retryOptions
+    );
 
     if (!response.ok) {
       throw new Error(`Model API error: ${response.status}`);
@@ -78,8 +85,8 @@ abstract class HttpModelAdapter implements ModelAdapter {
 }
 
 export class OpenAIAdapter extends HttpModelAdapter {
-  constructor(apiKey: string, model = 'gpt-4o-mini') {
-    super(apiKey, 'https://api.openai.com/v1/chat/completions', model);
+  constructor(apiKey: string, retryOptions: RetryOptions, model = 'gpt-4o-mini') {
+    super(apiKey, 'https://api.openai.com/v1/chat/completions', model, retryOptions);
   }
 
   protected buildRequest(prompt: string): Record<string, unknown> {
@@ -103,8 +110,8 @@ export class OpenAIAdapter extends HttpModelAdapter {
 }
 
 export class AnthropicAdapter extends HttpModelAdapter {
-  constructor(apiKey: string, model = 'claude-3-5-haiku-latest') {
-    super(apiKey, 'https://api.anthropic.com/v1/messages', model, 'x-api-key');
+  constructor(apiKey: string, retryOptions: RetryOptions, model = 'claude-3-5-haiku-latest') {
+    super(apiKey, 'https://api.anthropic.com/v1/messages', model, retryOptions, 'x-api-key');
   }
 
   protected buildRequest(prompt: string): Record<string, unknown> {
@@ -128,7 +135,8 @@ export class AnthropicAdapter extends HttpModelAdapter {
 export class LocalOllamaAdapter implements ModelAdapter {
   constructor(
     private readonly baseUrl: string,
-    private readonly model: string
+    private readonly model: string,
+    private readonly retryOptions: RetryOptions
   ) {}
 
   async review(input: ReviewInput): Promise<ReviewOutput> {
@@ -138,11 +146,15 @@ export class LocalOllamaAdapter implements ModelAdapter {
       `Findings summary: ${input.findingsSummary}`
     ].join('\n');
 
-    const response = await fetch(`${this.baseUrl}/api/generate`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ model: this.model, prompt, stream: false, format: 'json' })
-    });
+    const response = await fetchWithRetry(
+      `${this.baseUrl}/api/generate`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ model: this.model, prompt, stream: false, format: 'json' })
+      },
+      this.retryOptions
+    );
 
     if (!response.ok) {
       throw new Error(`Local model API error: ${response.status}`);
