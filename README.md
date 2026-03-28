@@ -35,6 +35,10 @@ npm run generate:webhook-secret
 
 Detailed app setup guide: [`docs/GITHUB_APP_SETUP.md`](docs/GITHUB_APP_SETUP.md)
 
+Architecture overview: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+
+Setup media plan (GIF): [`docs/QUICKSTART_MEDIA.md`](docs/QUICKSTART_MEDIA.md)
+
 ## Cloud-hosted path (easiest to scale)
 
 - Deploy to Fly.io / Railway / Render / AWS with env vars from `.env.example`
@@ -67,7 +71,7 @@ commentStyle: "concise"
 
 ## Roadmap
 
-1. Safe autofix branch + patch generation (`@openpr fix`) *(executor started with deterministic low-risk transforms)*
+1. Safe autofix branch + patch generation (`@openpr fix`) *(implemented with deterministic low-risk commit writeback on non-fork PRs)*
 2. Incremental diff-aware re-review mode
 3. Provider adapters (OpenAI/Anthropic/local) *(OpenAI + Anthropic + Local (Ollama) + Mock adapters implemented)*
 4. SARIF + security annotation output
