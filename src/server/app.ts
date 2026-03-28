@@ -5,6 +5,7 @@ import { rulesSchema } from '../config/schema.js';
 import { parseCommand } from '../core/commands.js';
 import { buildFixPlan, formatFixPlan } from '../core/fixPlan.js';
 import { evaluateAutofixPolicy } from '../core/autofixPolicy.js';
+import { buildSafePatch, formatPatchSummary } from '../core/autofixPatch.js';
 import { getInstallationClient } from '../github/client.js';
 import { buildReviewBody } from '../github/reviewFlow.js';
 import { MockAdapter } from '../models/adapter.js';
@@ -153,11 +154,17 @@ async function handleIssueComment(payload: IssueCommentPayload, appId: string, p
 
     const plan = buildFixPlan(changedFiles);
 
+    const patchCandidates = filesResponse.data.map((f) => ({
+      path: f.filename,
+      original: f.patch ?? ''
+    }));
+    const patchResult = buildSafePatch(patchCandidates);
+
     await client.issues.createComment({
       owner,
       repo,
       issue_number: issueNumber,
-      body: formatFixPlan(plan)
+      body: `${formatFixPlan(plan)}\n\n${formatPatchSummary(patchResult)}`
     });
   }
 
