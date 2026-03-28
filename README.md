@@ -67,7 +67,7 @@ commentStyle: "concise"
 
 ## Roadmap
 
-1. Safe autofix branch + patch generation (`@openpr fix`)
+1. Safe autofix branch + patch generation (`@openpr fix`) *(executor started with deterministic low-risk transforms)*
 2. Incremental diff-aware re-review mode
 3. Provider adapters (OpenAI/Anthropic/local)
 4. SARIF + security annotation output
