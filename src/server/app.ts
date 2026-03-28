@@ -6,6 +6,7 @@ import { parseCommand } from '../core/commands.js';
 import { buildFixPlan, formatFixPlan } from '../core/fixPlan.js';
 import { evaluateAutofixPolicy } from '../core/autofixPolicy.js';
 import { buildSafePatch, formatPatchSummary } from '../core/autofixPatch.js';
+import { executeAutofixCommit } from '../github/autofixCommit.js';
 import { getInstallationClient } from '../github/client.js';
 import { buildReviewBody } from '../github/reviewFlow.js';
 import { MockAdapter } from '../models/adapter.js';
@@ -158,14 +159,39 @@ async function handleIssueComment(payload: IssueCommentPayload, appId: string, p
       path: f.filename,
       original: f.patch ?? ''
     }));
-    const patchResult = buildSafePatch(patchCandidates);
+    const patchPreview = buildSafePatch(patchCandidates);
 
-    await client.issues.createComment({
-      owner,
-      repo,
-      issue_number: issueNumber,
-      body: `${formatFixPlan(plan)}\n\n${formatPatchSummary(patchResult)}`
-    });
+    try {
+      const commitResult = await executeAutofixCommit({
+        client,
+        owner,
+        repo,
+        pullNumber: issueNumber
+      });
+
+      if (commitResult.status === 'committed') {
+        await client.issues.createComment({
+          owner,
+          repo,
+          issue_number: issueNumber,
+          body: `${formatFixPlan(plan)}\n\n✅ Commit pushed: \`${commitResult.commitSha}\` on \`${commitResult.branch}\`\n- Changed files: ${commitResult.changedCount}\n- Skipped files: ${commitResult.skippedCount}`
+        });
+      } else {
+        await client.issues.createComment({
+          owner,
+          repo,
+          issue_number: issueNumber,
+          body: `${formatFixPlan(plan)}\n\n${formatPatchSummary(patchPreview)}\n\nℹ️ No deterministic safe edits required.`
+        });
+      }
+    } catch (error) {
+      await client.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body: `${formatFixPlan(plan)}\n\n${formatPatchSummary(patchPreview)}\n\n❌ Autofix commit failed. ${error instanceof Error ? error.message : 'Unknown error.'}`
+      });
+    }
   }
 
   if (command.kind === 'review') {
