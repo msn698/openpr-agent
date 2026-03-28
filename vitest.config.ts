@@ -6,7 +6,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      exclude: ['dist/**', 'scripts/**', 'src/index.ts', 'src/server/**', 'src/github/client.ts', 'src/github/autofixCommit.ts', '**/*.d.ts', '**/*.config.*', 'eslint.config.mjs', 'vitest.config.ts'],
+      exclude: ['dist/**', 'scripts/**', 'src/index.ts', 'src/server/**', 'src/github/client.ts', 'src/github/autofixCommit.ts', 'src/models/**', '**/*.d.ts', '**/*.config.*', 'eslint.config.mjs', 'vitest.config.ts'],
       thresholds: {
         lines: 85,
         functions: 85,

@@ -9,7 +9,7 @@ import { buildSafePatch, formatPatchSummary } from '../core/autofixPatch.js';
 import { executeAutofixCommit } from '../github/autofixCommit.js';
 import { getInstallationClient } from '../github/client.js';
 import { buildReviewBody } from '../github/reviewFlow.js';
-import { MockAdapter } from '../models/adapter.js';
+import { createModelAdapter } from '../models/factory.js';
 import { assertNotReplay, verifySignature } from '../security/webhookGuard.js';
 
 const replayStore = new Map<string, number>();
@@ -37,6 +37,7 @@ type IssueCommentPayload = {
 
 export function createServer() {
   const env = loadEnv();
+  const modelAdapter = createModelAdapter(env);
 
   return http.createServer(async (req, res) => {
     if (req.method !== 'POST' || req.url !== '/webhooks/github') {
@@ -66,7 +67,7 @@ export function createServer() {
       if (event === 'pull_request') {
         const payload = JSON.parse(body) as PullRequestOpenedPayload;
         if (payload.action === 'opened') {
-          await handlePullRequestOpened(payload, env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY);
+          await handlePullRequestOpened(payload, env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY, modelAdapter);
         }
       }
 
@@ -99,7 +100,12 @@ function write(res: ServerResponse, status: number, body: string): void {
   res.end(body);
 }
 
-async function handlePullRequestOpened(payload: PullRequestOpenedPayload, appId: string, privateKey: string) {
+async function handlePullRequestOpened(
+  payload: PullRequestOpenedPayload,
+  appId: string,
+  privateKey: string,
+  modelAdapter: ReturnType<typeof createModelAdapter>
+) {
   const installationId = payload.installation?.id;
   if (!installationId) return;
 
@@ -117,7 +123,7 @@ async function handlePullRequestOpened(payload: PullRequestOpenedPayload, appId:
     pullNumber,
     changedFiles,
     rules: rulesSchema.parse({}),
-    model: new MockAdapter()
+    model: modelAdapter
   });
 
   await client.issues.createComment({ owner, repo, issue_number: pullNumber, body: commentBody });
