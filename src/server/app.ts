@@ -176,6 +176,13 @@ async function handleIssueComment(payload: IssueCommentPayload, appId: string, p
           issue_number: issueNumber,
           body: `${formatFixPlan(plan)}\n\n✅ Commit pushed: \`${commitResult.commitSha}\` on \`${commitResult.branch}\`\n- Changed files: ${commitResult.changedCount}\n- Skipped files: ${commitResult.skippedCount}`
         });
+      } else if (commitResult.status === 'blocked') {
+        await client.issues.createComment({
+          owner,
+          repo,
+          issue_number: issueNumber,
+          body: `${formatFixPlan(plan)}\n\n⛔ ${commitResult.reason}\nBranch: \`${commitResult.branch}\``
+        });
       } else {
         await client.issues.createComment({
           owner,

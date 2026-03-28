@@ -13,6 +13,11 @@ export type CommitAutofixResult =
       status: 'no_changes';
       branch: string;
       skippedCount: number;
+    }
+  | {
+      status: 'blocked';
+      reason: string;
+      branch: string;
     };
 
 export async function executeAutofixCommit(params: {
@@ -26,6 +31,16 @@ export async function executeAutofixCommit(params: {
   const pr = await client.pulls.get({ owner, repo, pull_number: pullNumber });
   const headRef = pr.data.head.ref;
   const headSha = pr.data.head.sha;
+  const headRepoFullName = pr.data.head.repo?.full_name;
+  const baseRepoFullName = pr.data.base.repo.full_name;
+
+  if (!headRepoFullName || headRepoFullName !== baseRepoFullName) {
+    return {
+      status: 'blocked',
+      reason: 'Autofix commit is blocked for fork-based PRs (write access/safety boundary).',
+      branch: headRef
+    };
+  }
 
   const filesResponse = await client.pulls.listFiles({ owner, repo, pull_number: pullNumber, per_page: 100 });
   const filenames = filesResponse.data.map((f) => f.filename);
@@ -49,7 +64,6 @@ export async function executeAutofixCommit(params: {
       const decoded = Buffer.from(contentResponse.data.content, 'base64').toString('utf8');
       candidates.push({ path, original: decoded });
     } catch {
-      // Skip files that cannot be fetched (deleted/binary/submodule/etc).
       continue;
     }
   }
