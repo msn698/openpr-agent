@@ -8,7 +8,9 @@ const envSchema = z.object({
   GITHUB_PRIVATE_KEY: z.string().min(1),
   OPENAI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
-  MODEL_PROVIDER: z.enum(['mock', 'openai', 'anthropic']).default('mock')
+  MODEL_PROVIDER: z.enum(['mock', 'openai', 'anthropic', 'local']).default('mock'),
+  OLLAMA_BASE_URL: z.string().url().optional(),
+  LOCAL_MODEL: z.string().optional()
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

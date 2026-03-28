@@ -124,3 +124,39 @@ export class AnthropicAdapter extends HttpModelAdapter {
     return JSON.parse(content) as { summary: string; suggestedActions: string[] };
   }
 }
+
+export class LocalOllamaAdapter implements ModelAdapter {
+  constructor(
+    private readonly baseUrl: string,
+    private readonly model: string
+  ) {}
+
+  async review(input: ReviewInput): Promise<ReviewOutput> {
+    const prompt = [
+      'Return JSON only: {"summary":"...","suggestedActions":["..."]}',
+      `Changed files: ${input.changedFiles.join(', ')}`,
+      `Findings summary: ${input.findingsSummary}`
+    ].join('\n');
+
+    const response = await fetch(`${this.baseUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ model: this.model, prompt, stream: false, format: 'json' })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Local model API error: ${response.status}`);
+    }
+
+    const json = (await response.json()) as { response?: string };
+    const parsed = JSON.parse(json.response ?? '{}') as { summary?: string; suggestedActions?: string[] };
+
+    return {
+      summary: parsed.summary ?? 'No summary returned by local model.',
+      suggestedActions:
+        parsed.suggestedActions && parsed.suggestedActions.length > 0
+          ? parsed.suggestedActions
+          : ['Run tests and request human reviewer confirmation before merge.']
+    };
+  }
+}

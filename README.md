@@ -69,6 +69,6 @@ commentStyle: "concise"
 
 1. Safe autofix branch + patch generation (`@openpr fix`) *(executor started with deterministic low-risk transforms)*
 2. Incremental diff-aware re-review mode
-3. Provider adapters (OpenAI/Anthropic/local) *(OpenAI + Anthropic + Mock adapters implemented; local provider next)*
+3. Provider adapters (OpenAI/Anthropic/local) *(OpenAI + Anthropic + Local (Ollama) + Mock adapters implemented)*
 4. SARIF + security annotation output
 5. Dashboard for org-wide PR quality metrics
