@@ -4,6 +4,7 @@ import { loadEnv } from '../config/env.js';
 import { rulesSchema } from '../config/schema.js';
 import { parseCommand } from '../core/commands.js';
 import { buildFixPlan, formatFixPlan } from '../core/fixPlan.js';
+import { evaluateAutofixPolicy } from '../core/autofixPolicy.js';
 import { getInstallationClient } from '../github/client.js';
 import { buildReviewBody } from '../github/reviewFlow.js';
 import { MockAdapter } from '../models/adapter.js';
@@ -135,6 +136,21 @@ async function handleIssueComment(payload: IssueCommentPayload, appId: string, p
   if (command.kind === 'fix') {
     const filesResponse = await client.pulls.listFiles({ owner, repo, pull_number: issueNumber, per_page: 100 });
     const changedFiles = filesResponse.data.map((f) => f.filename);
+
+    const policy = evaluateAutofixPolicy(changedFiles);
+    if (!policy.allowed) {
+      const blockedSummary = policy.blockedFiles.length
+        ? `\n\nBlocked files:\n${policy.blockedFiles.map((f) => `- ${f}`).join('\n')}`
+        : '';
+      await client.issues.createComment({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        body: `## OpenPR Autofix\n\n❌ ${policy.reason ?? 'Autofix denied by policy.'}${blockedSummary}`
+      });
+      return;
+    }
+
     const plan = buildFixPlan(changedFiles);
 
     await client.issues.createComment({
