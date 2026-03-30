@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenPR Agent — Open-source AI PR reviewer + safe autofix bot</title>
+  <meta name="description" content="OpenPR Agent is an open-source AI PR reviewer and safe autofix bot for GitHub with security guardrails and BYO model adapters." />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <p class="badge">Open-source • GitHub App • TypeScript</p>
+      <h1>OpenPR Agent</h1>
+      <p class="subtitle">AI PR reviewer + safe autofix bot for GitHub.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="https://github.com/msn698/openpr-agent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        <a class="btn" href="https://github.com/msn698/openpr-agent/releases/tag/v0.2.0-beta" target="_blank" rel="noopener noreferrer">v0.2.0-beta</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section>
+      <h2>Why teams use OpenPR</h2>
+      <ul>
+        <li>Secure webhook verification + replay protection</li>
+        <li>Incremental <code>@openpr review</code> with commit-aware state</li>
+        <li>Safe deterministic <code>@openpr fix</code> with dry-run mode</li>
+        <li>Model adapters: Mock, OpenAI, Anthropic, Local (Ollama)</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Quick start</h2>
+      <pre><code>cp .env.example .env
+npm install
+npm run lint && npm run typecheck && npm test
+npm run dev</code></pre>
+    </section>
+
+    <section>
+      <h2>Links</h2>
+      <div class="links">
+        <a href="https://github.com/msn698/openpr-agent/blob/main/docs/GITHUB_APP_SETUP.md" target="_blank" rel="noopener noreferrer">Setup guide</a>
+        <a href="https://github.com/msn698/openpr-agent/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer">Architecture</a>
+        <a href="https://github.com/msn698/openpr-agent/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+        <a href="https://github.com/msn698/openpr-agent/discussions" target="_blank" rel="noopener noreferrer">Discussions</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">Built for fast, safe code review automation.</div>
+  </footer>
+</body>
+</html>
