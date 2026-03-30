@@ -1,6 +1,6 @@
 import http from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { loadEnv } from '../config/env.js';
+import { loadEnv, type AppEnv } from '../config/env.js';
 import { rulesSchema } from '../config/schema.js';
 import { parseCommand } from '../core/commands.js';
 import { buildFixPlan, formatFixPlan } from '../core/fixPlan.js';
@@ -76,7 +76,7 @@ export function createServer() {
       if (event === 'issue_comment') {
         const payload = JSON.parse(body) as IssueCommentPayload;
         if (payload.action === 'created') {
-          await handleIssueComment(payload, env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY, modelAdapter);
+          await handleIssueComment(payload, env, modelAdapter);
         }
       }
 
@@ -140,8 +140,7 @@ async function handlePullRequestOpened(
 
 async function handleIssueComment(
   payload: IssueCommentPayload,
-  appId: string,
-  privateKey: string,
+  env: AppEnv,
   modelAdapter: ReturnType<typeof createModelAdapter>
 ) {
   const installationId = payload.installation?.id;
@@ -153,7 +152,7 @@ async function handleIssueComment(
   const owner = payload.repository.owner.login;
   const repo = payload.repository.name;
   const issueNumber = payload.issue.number;
-  const client = await getInstallationClient(appId, privateKey, installationId);
+  const client = await getInstallationClient(env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY, installationId);
 
   if (command.kind === 'fix') {
     const filesResponse = await client.pulls.listFiles({ owner, repo, pull_number: issueNumber, per_page: 100 });
@@ -186,7 +185,8 @@ async function handleIssueComment(
         client,
         owner,
         repo,
-        pullNumber: issueNumber
+        pullNumber: issueNumber,
+        dryRun: env.AUTOFIX_DRY_RUN
       });
 
       if (commitResult.status === 'committed') {
@@ -195,6 +195,13 @@ async function handleIssueComment(
           repo,
           issue_number: issueNumber,
           body: `${formatFixPlan(plan)}\n\n✅ Commit pushed: \`${commitResult.commitSha}\` on \`${commitResult.branch}\`\n- Changed files: ${commitResult.changedCount}\n- Skipped files: ${commitResult.skippedCount}`
+        });
+      } else if (commitResult.status === 'dry_run') {
+        await client.issues.createComment({
+          owner,
+          repo,
+          issue_number: issueNumber,
+          body: `${formatFixPlan(plan)}\n\n🧪 Dry-run mode: preview commit \`${commitResult.previewCommitSha}\` on \`${commitResult.branch}\` (not pushed)\n- Changed files: ${commitResult.changedCount}\n- Skipped files: ${commitResult.skippedCount}`
         });
       } else if (commitResult.status === 'blocked') {
         await client.issues.createComment({

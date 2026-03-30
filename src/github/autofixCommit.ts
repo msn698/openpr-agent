@@ -18,6 +18,13 @@ export type CommitAutofixResult =
       status: 'blocked';
       reason: string;
       branch: string;
+    }
+  | {
+      status: 'dry_run';
+      branch: string;
+      changedCount: number;
+      skippedCount: number;
+      previewCommitSha: string;
     };
 
 export async function executeAutofixCommit(params: {
@@ -25,8 +32,9 @@ export async function executeAutofixCommit(params: {
   owner: string;
   repo: string;
   pullNumber: number;
+  dryRun?: boolean;
 }): Promise<CommitAutofixResult> {
-  const { client, owner, repo, pullNumber } = params;
+  const { client, owner, repo, pullNumber, dryRun = false } = params;
 
   const pr = await client.pulls.get({ owner, repo, pull_number: pullNumber });
   const headRef = pr.data.head.ref;
@@ -112,6 +120,16 @@ export async function executeAutofixCommit(params: {
     tree: newTree.data.sha,
     parents: [headSha]
   });
+
+  if (dryRun) {
+    return {
+      status: 'dry_run',
+      branch: headRef,
+      changedCount: patch.changedFiles.length,
+      skippedCount: patch.skippedFiles.length,
+      previewCommitSha: newCommit.data.sha
+    };
+  }
 
   await client.git.updateRef({
     owner,
