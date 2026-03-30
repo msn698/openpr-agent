@@ -1,16 +1,36 @@
 # OpenPR Agent
 
+[![CI](https://github.com/msn698/openpr-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/msn698/openpr-agent/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/msn698/openpr-agent/actions/workflows/codeql.yml/badge.svg)](https://github.com/msn698/openpr-agent/actions/workflows/codeql.yml)
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 Open-source AI pull request reviewer + fixer for GitHub.
 
-## What works now
+**Why people will care:** OpenPR gives teams a transparent, customizable alternative to closed PR bots — with security guardrails, deterministic autofixes, and BYO model support.
 
-- GitHub webhook server (`/webhooks/github`) with signature verification
-- Replay-attack protection for webhook deliveries
-- Pull request opened handler that comments with review findings
-- `@openpr fix` and `@openpr review` command parsing on PR comments
-- Rule-based checks (`.openpr.yml` / `.openpr.json`)
-- Security redaction layer for sensitive token patterns
-- CI + CodeQL + Dependabot + test coverage gates
+## 30-second demo
+
+1. Open a PR
+2. OpenPR posts a review summary + risk findings
+3. Comment `@openpr review` for incremental re-review
+4. Comment `@openpr fix` for safe deterministic fixes
+
+## Features
+
+- Secure GitHub webhook server (`/webhooks/github`)
+- HMAC signature verification + replay attack protection
+- PR review comments with model adapters:
+  - Mock
+  - OpenAI
+  - Anthropic
+  - Local (Ollama)
+- `@openpr review` with incremental commit-aware re-review
+- `@openpr fix` with safety policy gates:
+  - sensitive path blocking
+  - fork PR boundary protection
+  - optional dry-run mode
+- Deterministic safe autofix execution
+- CI + CodeQL + Dependabot + coverage thresholds
 
 ## Quick start (local/self-hosted)
 
@@ -23,56 +43,60 @@ npm test
 npm run dev
 ```
 
-Then expose your local server (e.g. with ngrok) and configure your GitHub App webhook URL:
+Expose your local server (e.g. ngrok) and set GitHub App webhook URL:
 
 `https://<your-domain>/webhooks/github`
 
-Generate a secure webhook secret quickly:
+Generate a secure webhook secret:
 
 ```bash
 npm run generate:webhook-secret
 ```
 
-Detailed app setup guide: [`docs/GITHUB_APP_SETUP.md`](docs/GITHUB_APP_SETUP.md)
+## Environment
 
-Architecture overview: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+Core:
+- `GITHUB_WEBHOOK_SECRET`
+- `GITHUB_APP_ID`
+- `GITHUB_PRIVATE_KEY`
 
-Setup media plan (GIF): [`docs/QUICKSTART_MEDIA.md`](docs/QUICKSTART_MEDIA.md)
+Model controls:
+- `MODEL_PROVIDER=mock|openai|anthropic|local`
+- `MODEL_TIMEOUT_MS=15000`
+- `MODEL_MAX_RETRIES=2`
+- `OPENAI_API_KEY` (if `openai`)
+- `ANTHROPIC_API_KEY` (if `anthropic`)
+- `OLLAMA_BASE_URL` + `LOCAL_MODEL` (if `local`)
 
-## Cloud-hosted path (easiest to scale)
+Autofix:
+- `AUTOFIX_DRY_RUN=true|false`
 
-- Deploy to Fly.io / Railway / Render / AWS with env vars from `.env.example`
-- Keep one instance running behind HTTPS
-- Configure GitHub App for your org/repo installations
+## Docs
 
-## Security posture
+- Setup guide: [`docs/GITHUB_APP_SETUP.md`](docs/GITHUB_APP_SETUP.md)
+- Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- 5-min media plan: [`docs/QUICKSTART_MEDIA.md`](docs/QUICKSTART_MEDIA.md)
 
-- HMAC signature verification (`x-hub-signature-256`)
-- Replay detection via `x-github-delivery`
-- Strict environment validation with Zod
-- Secret redaction in generated output
-- CI runs lint, typecheck, tests, and npm high-severity audit checks
-- CodeQL static analysis on pushes, PRs, and schedule
+## Contributing
 
-## Config
+Contributions are welcome — especially:
+- model adapters
+- deterministic autofix rules
+- SARIF/security annotations
+- onboarding docs/demo media
 
-Create `.openpr.yml`:
-
-```yaml
-maxFiles: 60
-blockedPatterns:
-  - ".env*"
-  - "*.pem"
-requiredChecks:
-  - "tests"
-  - "lint"
-commentStyle: "concise"
-```
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Roadmap
 
-1. Safe autofix branch + patch generation (`@openpr fix`) *(implemented with deterministic low-risk commit writeback on non-fork PRs)*
-2. Incremental diff-aware re-review mode
-3. Provider adapters (OpenAI/Anthropic/local) *(OpenAI + Anthropic + Local (Ollama) + Mock adapters implemented)*
-4. SARIF + security annotation output
-5. Dashboard for org-wide PR quality metrics
+- [x] Secure webhook + review bot baseline
+- [x] Incremental re-review state tracking
+- [x] Safe deterministic autofix writeback + dry-run
+- [x] OpenAI/Anthropic/Ollama adapters
+- [ ] SARIF output and GitHub code scanning annotations
+- [ ] PR quality dashboard
+- [ ] Hosted one-click deployment templates
+
+## License
+
+MIT
