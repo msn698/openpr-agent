@@ -3,55 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OpenPR Agent — Open-source AI PR reviewer + safe autofix bot</title>
-  <meta name="description" content="OpenPR Agent is an open-source AI PR reviewer and safe autofix bot for GitHub with security guardrails and BYO model adapters." />
+  <title>OpenPR Agent — AI PR Reviewer + Safe Autofix Bot</title>
+  <meta name="description" content="OpenPR Agent is an open-source AI PR reviewer and safe autofix bot for GitHub. See roadmap, project status, and contribute." />
+  <meta property="og:title" content="OpenPR Agent" />
+  <meta property="og:description" content="Open-source AI PR reviewer + safe autofix bot for GitHub." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://msn698.github.io/openpr-agent/" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <header class="hero">
-    <div class="container">
-      <p class="badge">Open-source • GitHub App • TypeScript</p>
-      <h1>OpenPR Agent</h1>
-      <p class="subtitle">AI PR reviewer + safe autofix bot for GitHub.</p>
-      <div class="actions">
-        <a class="btn btn-primary" href="https://github.com/msn698/openpr-agent" target="_blank" rel="noopener noreferrer">View on GitHub</a>
-        <a class="btn" href="https://github.com/msn698/openpr-agent/releases/tag/v0.2.0-beta" target="_blank" rel="noopener noreferrer">v0.2.0-beta</a>
+    <div class="container hero-grid">
+      <div>
+        <p class="badge">Open-source • GitHub App • TypeScript</p>
+        <h1>OpenPR Agent</h1>
+        <p class="subtitle">AI pull request reviewer + safe autofix bot for GitHub.</p>
+        <p class="lede">
+          Built for teams that want transparent, auditable PR automation with strong security guardrails.
+        </p>
+        <div class="actions">
+          <a class="btn btn-primary" href="https://github.com/msn698/openpr-agent" target="_blank" rel="noopener noreferrer">⭐ Star on GitHub</a>
+          <a class="btn" href="https://github.com/msn698/openpr-agent/issues" target="_blank" rel="noopener noreferrer">Contribute</a>
+          <a class="btn" href="https://github.com/msn698/openpr-agent/releases/tag/v0.2.0-beta" target="_blank" rel="noopener noreferrer">Latest Release</a>
+        </div>
+      </div>
+      <div class="status-card">
+        <h3>Project Status</h3>
+        <ul>
+          <li><span class="dot green"></span> Beta live</li>
+          <li><span class="dot green"></span> CI + CodeQL active</li>
+          <li><span class="dot yellow"></span> SARIF annotations in progress</li>
+          <li><span class="dot yellow"></span> One-click deploy templates pending</li>
+        </ul>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <section>
-      <h2>Why teams use OpenPR</h2>
-      <ul>
-        <li>Secure webhook verification + replay protection</li>
-        <li>Incremental <code>@openpr review</code> with commit-aware state</li>
-        <li>Safe deterministic <code>@openpr fix</code> with dry-run mode</li>
-        <li>Model adapters: Mock, OpenAI, Anthropic, Local (Ollama)</li>
-      </ul>
+    <section class="panel">
+      <h2>What it does</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>Secure Review Webhooks</h3>
+          <p>HMAC signature verification + replay protection for GitHub webhook events.</p>
+        </article>
+        <article class="card">
+          <h3>Incremental Re-review</h3>
+          <p><code>@openpr review</code> tracks reviewed commit state and only re-analyzes deltas.</p>
+        </article>
+        <article class="card">
+          <h3>Safe Autofix</h3>
+          <p><code>@openpr fix</code> applies deterministic low-risk changes with policy gates and dry-run support.</p>
+        </article>
+        <article class="card">
+          <h3>Model Flexibility</h3>
+          <p>Use Mock, OpenAI, Anthropic, or local Ollama adapters with timeout/retry controls.</p>
+        </article>
+      </div>
     </section>
 
-    <section>
-      <h2>Quick start</h2>
-      <pre><code>cp .env.example .env
-npm install
-npm run lint && npm run typecheck && npm test
-npm run dev</code></pre>
+    <section class="panel">
+      <h2>Live roadmap</h2>
+      <div class="roadmap">
+        <div class="item done"><strong>Done:</strong> secure webhook + review bot baseline</div>
+        <div class="item done"><strong>Done:</strong> incremental commit-aware re-review</div>
+        <div class="item done"><strong>Done:</strong> deterministic safe autofix + dry-run</div>
+        <div class="item done"><strong>Done:</strong> OpenAI / Anthropic / Ollama adapters</div>
+        <div class="item doing"><strong>Now:</strong> SARIF output + code scanning annotations</div>
+        <div class="item todo"><strong>Next:</strong> one-click deploy templates (Railway / Fly / Render)</div>
+        <div class="item todo"><strong>Next:</strong> project dashboard for PR quality metrics</div>
+      </div>
     </section>
 
-    <section>
-      <h2>Links</h2>
-      <div class="links">
-        <a href="https://github.com/msn698/openpr-agent/blob/main/docs/GITHUB_APP_SETUP.md" target="_blank" rel="noopener noreferrer">Setup guide</a>
-        <a href="https://github.com/msn698/openpr-agent/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noopener noreferrer">Architecture</a>
+    <section class="panel">
+      <h2>Contribute</h2>
+      <p>OpenPR Agent is built in public. If you want to help, jump into issues, discussions, or open a PR.</p>
+      <div class="links-grid">
+        <a href="https://github.com/msn698/openpr-agent" target="_blank" rel="noopener noreferrer">Repository</a>
         <a href="https://github.com/msn698/openpr-agent/issues" target="_blank" rel="noopener noreferrer">Issues</a>
         <a href="https://github.com/msn698/openpr-agent/discussions" target="_blank" rel="noopener noreferrer">Discussions</a>
+        <a href="https://github.com/msn698/openpr-agent/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing Guide</a>
+        <a href="https://github.com/msn698/openpr-agent/blob/main/docs/GITHUB_APP_SETUP.md" target="_blank" rel="noopener noreferrer">Setup Docs</a>
+        <a href="https://github.com/msn698/openpr-agent/releases" target="_blank" rel="noopener noreferrer">Releases</a>
       </div>
     </section>
   </main>
 
   <footer>
-    <div class="container">Built for fast, safe code review automation.</div>
+    <div class="container foot">
+      <span>OpenPR Agent • Built for fast, safe code review automation.</span>
+      <a href="https://github.com/msn698/openpr-agent" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
   </footer>
 </body>
 </html>
